@@ -1,11 +1,13 @@
 ///2D vector functions
 
+#macro TPI (2 * pi)
+
 /// @func			Vector2(_x2, _y2, _x1, _y1)
 /// @desc			Creates a 2D vector using the given coordinates.
-/// @param {float}	_x2 The x value for the end point of the vector. 
-/// @param {float}	_y2 The y value for the end point of the vector. 
-/// @param {float}	_x1 (Optional) The x value for the start point of the vector. 
-/// @param {float}	_y1 (Optional) The y value for the start point of the vector. 
+/// @param {real}	_x2 The x value for the end point of the vector. 
+/// @param {real}	_y2 The y value for the end point of the vector. 
+/// @param {real}	_x1 (Optional) The x value for the start point of the vector. 
+/// @param {real}	_y1 (Optional) The y value for the start point of the vector. 
 /// @return {Vector2}
 
 function Vector2(_x2, _y2, _x1 = 0, _y1 = 0) constructor
@@ -17,16 +19,30 @@ function Vector2(_x2, _y2, _x1 = 0, _y1 = 0) constructor
 	
 	dx = x2 - x1;
 	dy = y2 - y1;
-	magnitude = sqrt( sqr(dx) + sqr(dy) );
+	magnitude2 = sqr(dx) + sqr(dy);
 	
 	angle = arctan2(-dy, dx);
 	
 	if (angle < 0)
 	{
-		angle += 2 * pi;
+		angle += TPI;
 	}
 	
 	dangle = radtodeg(angle);
+	
+	//Update the squared magnitude
+	
+	static update_mag = function()
+	{
+		magnitude2 = sqr(dx) + sqr(dy);
+	}
+	
+	//Return the magnitude of the vector
+	
+	static get_magnitude = function()
+	{
+		return sqrt(magnitude2);
+	}
 	
 	//Update the angle, making sure it varies from 0 to 2*pi / 0 to 360
 	
@@ -36,7 +52,7 @@ function Vector2(_x2, _y2, _x1 = 0, _y1 = 0) constructor
 	
 		if (angle < 0)
 		{
-			angle += 2 * pi;
+			angle += TPI;
 		}
 	
 		dangle = radtodeg(angle);
@@ -44,7 +60,7 @@ function Vector2(_x2, _y2, _x1 = 0, _y1 = 0) constructor
 	
 	//Copy constructor
 	
-	static copy = function(_vec2)
+	static copy = function()
 	{
 		return new Vector2(x2, y2, x1, y1);
 	}
@@ -57,9 +73,9 @@ function Vector2(_x2, _y2, _x1 = 0, _y1 = 0) constructor
 		y2 = _y;
 		dx = x2 - x1;
 		dy = y2 - y1;
-		magnitude = sqrt( sqr(dx) + sqr(dy) );
 		
 		update_angle();
+		update_mag();
 	}
 	
 	//Set a new starting point for the vector
@@ -70,36 +86,36 @@ function Vector2(_x2, _y2, _x1 = 0, _y1 = 0) constructor
 		y1 = _y;
 		dx = x2 - x1;
 		dy = y2 - y1;
-		magnitude = sqrt( sqr(dx) + sqr(dy) );
 		
 		update_angle();
+		update_mag();
 	}
 	
-	//Set a new starting point for the vector based on _vec2.
-	//Optionally, get the point by interpolation along _vec2 by c.
-	//By default, c = 1 (i.e., the endpoint of _vec2). c must be between 0 and 1.
+	//Set a new starting point for the vector based on vec2.
+	//Optionally, get the point by interpolation along vec2 by c.
+	//By default, c = 1 (i.e., the endpoint of vec2). c must be between 0 and 1.
 	
-	static rebase_from_vector = function(_vec2, c = 1)
+	static rebase_from_vector = function(vec2, c = 1)
 	{
-		clamp(c, 0, 1);
+		c = clamp(c, 0, 1);
 		
 		if (c == 1)
 		{
-			rebase(_vec2.x2, _vec2.y2);
+			rebase(vec2.x2, vec2.y2);
 		}
 		else
 		{
-			xx = interp_x_vec2(_vec2, c);
-			yy = interp_y_vec2(_vec2, c);
+			xx = vec2.interp_x(c);
+			yy = vec2.interp_y(c);
 			rebase(xx, yy);
 		}
 	}
 	
-	//Join the base of the vector to that of _vec2.
+	//Join the base of the vector to that of vec2.
 	
-	static lock_base = function(_vec2)
+	static lock_base = function(vec2)
 	{
-		rebase(_vec2.x1, _vec2.y1);
+		rebase(vec2.x1, vec2.y1);
 	}
 	
 	//Completely redefine the points of the vector. Essentially reinstantiating the vector.
@@ -114,34 +130,41 @@ function Vector2(_x2, _y2, _x1 = 0, _y1 = 0) constructor
 	
 		dx = x2 - x1;
 		dy = y2 - y1;
-		magnitude = sqrt( sqr(dx) + sqr(dy) );
+		
+		update_angle();
+		update_mag();
+	}
 	
+	//Return the Manhattan distance.
+	
+	static manhattan = function()
+	{
+		return dx + dy;
+	}
+	
+	//Add vec2 to the vector
+	
+	static add = function(vec2)
+	{
+		x2 += vec2.dx;
+		y2 += vec2.dy;
+		dx = x2 - x1;
+		dy = y2 - y1;
+		
+		update_mag();
 		update_angle();
 	}
 	
-	//Add _vec2 to the vector
+	//Subtract (Add inverse) vec2 to the vector
 	
-	static add = function(_vec2)
+	static sub = function(vec2)
 	{
-		x2 += _vec2.dx;
-		y2 += _vec2.dy;
+		x2 -= vec2.dx;
+		y2 -= vec2.dy;
 		dx = x2 - x1;
 		dy = y2 - y1;
-		magnitude = sqrt( sqr(dx) + sqr(dy) );
 		
-		update_angle();
-	}
-	
-	//Subtract (Add inverse) _vec2 to the vector
-	
-	static sub = function(_vec2)
-	{
-		x2 -= _vec2.dx;
-		y2 -= _vec2.dy;
-		dx = x2 - x1;
-		dy = y2 - y1;
-		magnitude = sqrt( sqr(dx) + sqr(dy) );
-		
+		update_mag();
 		update_angle();
 	}
 	
@@ -153,7 +176,8 @@ function Vector2(_x2, _y2, _x1 = 0, _y1 = 0) constructor
 		dy *= c;
 		x2 = x1 + dx;
 		y2 = y1 + dy;
-		magnitude *= c;
+		
+		update_mag();
 	}
 	
 	//Invert the vector (scale by -1)
@@ -165,8 +189,7 @@ function Vector2(_x2, _y2, _x1 = 0, _y1 = 0) constructor
 		x2 += 2 * dx;
 		y2 += 2 * dy;
 		
-		angle = (angle + pi) % (2 * pi);
-		dangle = radtodeg(angle);
+		update_angle();
 	}
 	
 	//Divide the vector by c (scale by inverse).
@@ -184,12 +207,12 @@ function Vector2(_x2, _y2, _x1 = 0, _y1 = 0) constructor
 		dy *= c2;
 		x2 = x1 + dx;
 		y2 = y1 + dy;
-		magnitude = sqrt( sqr(dx) + sqr(dy) );
 		
+		update_mag();
 		update_angle();
 	}
 	
-	//Transform the vector by the two given scalars. Like multiplying by a 2x2 matrix.
+	//Transform the vector by the four given scalars. Like multiplying by a 2x2 matrix.
 	
 	static transform = function(a1, a2, b1, b2)
 	{
@@ -199,8 +222,8 @@ function Vector2(_x2, _y2, _x1 = 0, _y1 = 0) constructor
 		dy = yy;
 		x2 = x1 + dx;
 		y2 = y1 + dy;
-		magnitude = sqrt( sqr(dx) + sqr(dy) );
-		
+	
+		update_mag();
 		update_angle();
 	}
 	
@@ -212,8 +235,8 @@ function Vector2(_x2, _y2, _x1 = 0, _y1 = 0) constructor
 		yy = dx * m[1][0] + dy * m[1][1];
 		dx = xx;
 		dy = yy;
-		magnitude = sqrt( sqr(dx) + sqr(dy) );
 		
+		update_mag();
 		update_angle();
 	}
 	
@@ -221,47 +244,51 @@ function Vector2(_x2, _y2, _x1 = 0, _y1 = 0) constructor
 	
 	static shear_x = function(c)
 	{
-		transform(1, c, 0, 1);
+		dx += dy * c;
 	}
 	
 	//Shear in the y direction by c.
 	
 	static shear_y = function(c)
 	{
-		transform(1, 0, c, 1);
+		dy += dx * c;
 	}
 	
-	//Return the dot product of the vector and _vec2.
+	//Return the dot product of the vector and vec2.
 	
-	static dot = function(_vec2)
+	static dot = function(vec2)
 	{
-		return dx * _vec2.dx + dy * _vec2.dy; 
+		return dx * vec2.dx + dy * vec2.dy; 
 	}
 	
-	//Return the cross product of the vector and _vec2.
+	//Return the cross product of the vector and vec2.
 	//Result is based at vector start point by default.
 	
-	static cross = function(_vec2, _x1 = x1, _y1 = y1)
+	static cross = function(vec2, _x1 = x1, _y1 = y1)
 	{
-		m = (dx * _vec2.dy) - (dy * _vec2.dx);
+		m = (dx * vec2.dy) - (dy * vec2.dx);
 		
 		return new Vector3(_x1, _y1, m, _x1, _y1, 0);
 	}
 	
-	//Return the magnitude of the cross product of the vector and _vec2.
+	//Return the magnitude of the cross product of the vector and vec2.
 	
-	static cross_magnitude = function(_vec2)
+	static cross_magnitude = function(vec2)
 	{
-		return (dx * _vec2.dy) - (dy * _vec2.dx);
+		return (dx * vec2.dy) - (dy * vec2.dx);
 	}
 	
 	//Rotate the vector about the origin by theta, in radians.
 	
 	static rotate = function(theta)
 	{
+		cos0 = cos(theta);
+		sin0 = sin(theta);
+		
+		
 		//This is the result of multiplying the vector by a rotation matrix
-		xx = cos(theta) * dx - sin(theta) * dy;
-		yy = sin(theta) * dx + cos(theta) * dy;
+		xx = cos0 * dx - sin0 * dy;
+		yy = sin0 * dx + cos0 * dy;
 		dx = xx;
 		dy = yy;
 		x2 = x1 + dx;
@@ -277,36 +304,31 @@ function Vector2(_x2, _y2, _x1 = 0, _y1 = 0) constructor
 		rotate(degtorad(theta));
 	}
 	
-	//REFERENCE-FREE FUNCTIONS DONE UP TO HERE
+	//Get the angle between this vector and vec2, in radians.
 	
-	//Get the angle between this vector and _vec2, in radians.
-	
-	static get_angle = function(_vec2)
+	static get_angle = function(vec2)
 	{
-		a = angle - _vec2.angle;
-		
+		a = angle - vec2.angle;
+		b = -a;
+
 		if (a < 0)
 		{
-			a += 2 * pi;
+			a += TPI;
 		}
-		
-		b = _vec2.angle - angle;
-		
-		if (b < 0)
+		else
 		{
-			b += 2 * pi;
+			b += TPI;
 		}
 		
 		return min(a, b);
-		//Follows from A.B = |A|*|B|*cos(theta)
-		//return arccos(dot(_vec2) / (magnitude * _vec2.magnitude));
+		return arccos(0);
 	}
 	
-	//Get the angle between this vector and _vec2, in degrees.
+	//Get the angle between this vector and vec2, in degrees.
 	
-	static get_angle_deg = function(_vec2)
+	static get_angle_deg = function(vec2)
 	{
-		return radtodeg(get_angle(_vec2));
+		return radtodeg(get_angle(vec2));
 	}
 	
 	//Determine the distance between the vector and a point.
@@ -315,50 +337,51 @@ function Vector2(_x2, _y2, _x1 = 0, _y1 = 0) constructor
 	{
 		v = new Vector2(_x, _y, x1, y1);
 		theta = get_angle(v);
-		d = v.magnitude * sin(theta);
+		d = v.get_magnitude() * sin(theta);
 		
 		delete v;
 		return abs(d);
 	}
 	
-	//Get the projection of the vector onto _vec2. Optionally, choose whether it should
-	//be able to have a magnitude greater than _vec2.
+	//Get the projection of the vector onto vec2. Optionally, choose whether it should
+	//be able to have a magnitude greater than vec2.
 	
-	static projection = function(_vec2, overextend = true)
+	static projection = function(vec2, overextend = true)
 	{
-		//projection = v*cos0 times unit vector in _vec2.
-		b = copy_vec2(_vec2);
-		c = dot(b) / sqr(b.magnitude);
-		b.scale(c); //Same as scaling b.divide(b.magnitude) by dot(b) / b.magnitude
+		//projection = v*cos0 times unit vector in vec2.
+		b = vec2.copy();
+		c = dot(b) / b.magnitude2;
+		b.scale(c);
 		
 		if (!overextend)
 		{
-			if (b.magnitude > _vec2.magnitude)
+			if (b.magnitude2 > vec2.magnitude2)
 			{
-				b.scale(_vec2.magnitude / b.magnitude);
+				b.scale(sqrt(vec2.magnitude2 / b.magnitude2));
 			}
 		}
 		
 		return b;
 	}
 	
-	//Get the rejection of the vector from _vec2. Optionally, choose whether it should be
+	//Get the rejection of the vector from vec2. Optionally, choose whether it should be
 	//locked to its related projection and whether it should overextend its basis vector.
 	
-	static rejection = function(_vec2, lock_to_proj = false, overextend = true)
+	static rejection = function(vec2, lock_to_proj = false, overextend = true)
 	{
 		a1 = copy();
-		a2 = projection(_vec2, overextend);
+		a2 = projection(vec2, overextend);
 		
 		if (!overextend)
 		{
 			//If the hypotenuse breaches a right angle triangle, we scale it down so that
 			//the rejection thinks it is at the furthest boundary of the projection.
-			cos0 = a1.dot(a2) / (a1.magnitude * a2.magnitude);
 			
-			if (a1.magnitude * cos0 > a2.magnitude)
+			//cos0 = a1.dot(a2) / (a1.magnitude * a2.magnitude);
+			
+			if (a1.dot(a2) > a2.magnitude2) //If cos0 * a1.mag > a2.mag
 			{
-				a1.scale(a2.magnitude / (a1.magnitude * cos0));
+				a1.scale(a2.magnitude2 / a1.dot(a2)); //Scale by a1.magnitude / a2.magnitude * cos0
 			}
 		}
 		
@@ -394,8 +417,6 @@ function Vector2(_x2, _y2, _x1 = 0, _y1 = 0) constructor
 		ncos0 = cos(theta) - 1;
 		sin0 = sin(theta);
 		
-		//This is an abbreviation of the math in the Rotate method, without the overhead of
-		//instantiating a new vector or the required consideration of updating its fields.
 		xx = ncos0 * rx - sin0 * ry;
 		yy = sin0 * rx + ncos0 * ry; 
 		
@@ -460,48 +481,80 @@ function Vector2(_x2, _y2, _x1 = 0, _y1 = 0) constructor
 		delete r;
 	}
 	
-	//Checks whether the given point is on the vector.
+	//Checks whether the given point is on the vector within the given tolerance.
 	
-	static is_on_line = function(_x, _y)
-	{
-		return (dy * _x - dx * _y == 0);
+	static is_on_line = function(_x, _y, tolerance)
+	{	
+		var xa = _x - x1;
+		var xb = x2 - _x;
+		var ya = _y - y1;
+		var yb = y2 - _y;
+		
+		//Check the difference between [point A to (_x, _y)] + [(_x, _y) to point B], and 
+		//the magnitude of the calling vector.
+		
+		var diff = sqrt( sqr(xa) + sqr(ya) ) + sqrt( sqr(xb) + sqr(yb) ) - get_magnitude();
+		
+		return (diff <= tolerance);
 	}
 	
 	//Checks whether the given vector intersects with the calling vector.
 	//Optionally, select whether the calling vector should be treated as infinite.
 	
-	static intersects = function(_vec2, extend)
+	static intersects = function(vec2, infinite)
 	{
-		p1 = dy * _vec2.x1 - dx * _vec2.y1;
-		p2 = dy * _vec2.x2 - dx * _vec2.y2;
 		
-		if (-1 * sign(p1) == sign(p2))
+		//This function returns -1, 0, or 1 depending on the relative orientation of
+		//the vector with respect to the given point.
+		var orientation = function(cx, cy)
 		{
-			if (!extend)
+			return sign(dy * (cx - x2) - dx * (cy - y2))
+		}
+		
+		op1 = orientation(vec2.x1, vec2.y1);
+		op2 = orientation(vec2.x2, vec2.y2);
+		
+		//If the two endpoints of vec2 have different orientation (intersect)
+		//or either are 0 (collinear)
+		if !(abs(op1 + op2) == 2) //Takes in all cases except (1, 1) and (-1, -1)
+		{
+			if (!infinite)
 			{
+				//If we treat vec2 as finite, we have to make sure that its points are
+				//on either side of the calling vector.
+				v = new Vector2(x2, y2, x1, y1);
 				
+				if (!vec2.intersects(v, true))
+				{
+					delete v;
+					return false;
+				}
+				
+				delete v;
 			}
 			
 			return true;
 		}
-		
-		return false;
+		else
+		{
+			return false;
+		}
 	}
 	
 	
 	//Get the x value interpolated along the vector by c. c must be between 0 and 1
 	
-	static interp_x = function(_c)
+	static interp_x = function(c)
 	{
-		c = clamp(_c, 0, 1);
+		c = clamp(c, 0, 1);
 		return x1 + dx * c;
 	}
 	
 	//Get the y value interpolated along the vector by c. c must be between 0 and 1
 	
-	static interp_y = function(_c)
+	static interp_y = function(c)
 	{
-		c = clamp(_c, 0, 1);
+		c = clamp(c, 0, 1);
 		return y1 + dy * c;
 	}
 	
@@ -511,200 +564,4 @@ function Vector2(_x2, _y2, _x1 = 0, _y1 = 0) constructor
 	{
 			draw_line_width_color(x1, y1, x2, y2, t, c1, c2);
 	}
-}
-	
-	
-/// @func				copy_vec2(_vec2)
-/// @desc				Return a copy of _vec2. Creates a new vector using its end points.
-/// @param {Vector2}	_vec2 The vector being copied.
-/// @return {Vector2}
-	
-function copy_vec2(_vec2)
-{
-	return new Vector2(_vec2.x2, _vec2.y2, _vec2.x1, _vec2.y1);
-}
-	
-/// @func				v_add(_vec1, _vec2)
-/// @desc				Add the second Vector2 to the first.
-/// @param {Vector2}	_vec1 The vector being added to.
-/// @param {Vector2}	_vec2 The vector being added.
-	
-function v_add(_vec1, _vec2)
-{
-	_vec1.x2 += _vec2.dx;
-	_vec1.y2 += _vec2.dy;
-	_vec1.dx = _vec1.x2 - _vec1.x1;
-	_vec1.dy = _vec1.y2 - _vec1.y1;
-	_vec1.magnitude = sqrt( sqr(_vec1.dx) + sqr(_vec1.dy) );
-		
-	_vec1.angle = arctan2(-dy, dx);
-	dangle = radtodeg(angle);
-}
-	
-/// @func				v_sub(_vec1, _vec2)
-/// @desc				Subtract the second Vector2 from the first one.
-/// @param {Vector2}	_vec1 The vector being subtracted from.
-/// @param {Vector2}	_vec2 The vector being subtracted.
-	
-function v_sub(_vec1, _vec2)
-{
-	_vec1.x2 -= _vec2.dx;
-	_vec1.y2 -= _vec2.dy;	
-	_vec1.dx = _vec1.x2 - _vec1.x1;
-	_vec1.dy = _vec1.y2 - _vec1.y1;
-	_vec1.magnitude = sqrt( sqr(_vec1.dx) + sqr(_vec1.dy) );
-		
-	_vec1.angle = arctan2(-_vec1.dy, _vec1.dx);
-	_vec1.dangle = radtodeg(_vec1.angle);
-}
-	
-/// @func				v_scale(_vec2, c)
-/// @desc				Scale the vector by the given constant.
-/// @param {Vector2}	_vec2 The vector being scaled.
-/// @param {float}		c The scale factor to be applied. 
-	
-function v_scale(_vec2, c)
-{
-	_vec2.dx *= c;
-	_vec2.dy *= c;
-	_vec2.x2 = _vec2.x1 + _vec2.dx;
-	_vec2.y2 = _vec2.y1 + _vec2.dy;
-	_vec2.magnitude *= c;
-}
-
-/// @func				v_invert(_vec2)
-/// @desc				Reverse the vector. This is equivalent to scaling it by -1.
-/// @param {Vector2}	_vec2 The vector inverted.
-
-function v_invert(_vec2)
-{
-	_vec2.dx *= -1;
-	_vec2.dy *= -1;
-	_vec2.x2 += 2 * _vec2.dx;
-	_vec2.y2 += 2 * _vec2.dy;
-	
-	_vec2.angle = (_vec2.angle + pi) % (2 * pi);
-	_vec2.dangle = radtodeg(_vec2.angle);
-}
-
-/// @func				v_rebase(_vec2, _x, _y)
-/// @desc				Set the start point of the vector to the given coordinates.
-/// @param {Vector2}	_vec2 The vector being rebased.
-/// @param {float}		_x The new x value of the start point.
-/// @param {float}		_y The new y value of the start point.
-
-function v_rebase(_vec2, _x, _y)
-{
-	_vec2.x1 = _x;
-	_vec2.y1 = _y;
-	_vec2.dx = _vec2.x2 - _vec2.x1;
-	_vec2.dy = _vec2.y2 - _vec2.y1;
-	_vec2.magnitude = sqrt( sqr(_vec2.dx) + sqr(_vec2.dy) );
-	
-	_vec2.angle = arctan2(-_vec2.dy, _vec2.dx);
-	_vec2.dangle = radtodeg(_vec2.angle);
-}
-	
-/// @func				v_rebase_from_vector(_vec1, _vec2, c)
-/// @desc				Set the start point of the vector at a certain point along _vec2.
-/// @param {Vector2}	_vec1 The vector being rebased.
-/// @param {Vector2}	_vec2 The vector being used as a reference for the new start point.
-/// @param {float}		c (Optional) How far along the new start point will be, as a proportion.
-	
-function v_rebase_from_vector(_vec1, _vec2, c = 1)
-{
-	if (c >= 1)
-	{
-		v_rebase(_vec1, _vec2.x2, _vec2.y2);
-	}
-	else
-	{
-		xx = _vec2.x1 + _vec2.dx * c;
-		yy = _vec2.y1 + _vec2.dy * c;
-		v_rebase(_vec1, xx, yy);
-	}
-}
-
-/// @func				v_dot(_vec1, _vec2)
-/// @desc				Returns the dot product of _vec1 and _vec2.
-/// @param {Vector2}	_vec1 The first vector being used to calculate the dot product.
-/// @param {Vector2}	_vec2 The second vector being used to calculate the dot product.
-/// @return {float}
-
-function v_dot(_vec1, _vec2)
-{
-	return abs(_vec1.dx * _vec2.dx + _vec1.dy * _vec2.dy); 
-}
-
-/// @func				v_cross(_vec1, _vec2)
-/// @desc				Returns the cross product of the two vectors. Implicit z value of 1.
-/// @param {Vector2}	_vec1 The first vector being used to calculate the cross product.
-/// @param {Vector2}	_vec2 The second vector being used to calculate the cross product.
-/// @return {Vector2}
-
-function v_cross(_vec1, _vec2)
-{
-	xx = _vec1.dy - _vec2.dy;
-	yy = _vec1.dx = _vec2.dx;
-	
-	return new Vector2(xx, yy);
-}
-
-/// @func				v_rotate(_vec1, theta)
-/// @desc				Rotate the vector by the given angle in radians.
-/// @param {Vector2}	_vec2 The vector being rotated.
-/// @param {float}		theta The angle of rotation, in radians.
-
-function v_rotate(_vec2, theta)	
-{
-	xx = cos(theta) * _vec2.dx - sin(theta) * _vec2.dy;
-	yy = sin(theta) * _vec2.dx + cos(theta) * _vec2.dy;
-	_vec2.dx = xx;
-	_vec2.dy = yy;
-	_vec2.x2 = _vec2.x1 + _vec2.dx;
-	_vec2.y2 = _vec2.y1 - _vec2.dy;
-	
-	_vec2.angle = (_vec2.angle - theta) % (2 * pi);
-	
-	if (_vec2.angle < 0)
-	{
-		_vec2.angle = 2 * pi;
-	}
-	
-	_vec2.dangle = radtodeg(theta);
-}
-
-/// @func				v_rotate_deg(_vec2, theta)
-/// @desc				Rotate the vector by the given angle in degrees.
-/// @param {Vector2}	_vec2 The vector being rotated.
-/// @param {float}		theta The angle of rotation, in degrees.
-
-function v_rotate_deg(_vec2, theta)
-{
-	v_rotate(_vec2, degtorad(theta));
-}
-
-/// @func				interp_x_vec2(_vec2, c)
-/// @desc				Get the x value interpolated along the vector by c, between 0 and 1.
-/// @param {Vector2}	_vec2 The vector to interpolate along.
-/// @param {float}		c How far along the vector we interpolate, as a proportion.
-/// @return {float}
-
-	
-function interp_x_vec2(_vec2, c)
-{
-	clamp(c, 0, 1);
-	return _vec2.x1 + _vec2.dx * c;
-}
-	
-/// @func				interp_y_vec2(_vec2, c)
-/// @desc				Get the y value interpolated along the vector by c, between 0 and 1.
-/// @param {Vector2}	_vec2 The vector to interpolate along.
-/// @param {float}		c How far along the vector we interpolate, as a proportion.
-/// @return {float}
-
-function interp_y_vec2 (_vec2, c)
-{
-	clamp(c, 0, 1);
-	return _vec2.y1 + _vec2.dy * c;
 }
