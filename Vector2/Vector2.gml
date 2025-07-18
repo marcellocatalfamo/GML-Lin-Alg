@@ -8,7 +8,7 @@
 /// @param {real}	_y2 The y value for the end point of the vector. 
 /// @param {real}	_x1 (Optional) The x value for the start point of the vector. 
 /// @param {real}	_y1 (Optional) The y value for the start point of the vector. 
-/// @return {Vector2}
+/// @return {struct.Vector2}
 
 function Vector2(_x2, _y2, _x1 = 0, _y1 = 0) constructor
 {
@@ -169,7 +169,7 @@ function Vector2(_x2, _y2, _x1 = 0, _y1 = 0) constructor
 	}
 	
 	//Scale the vector by c
-	
+
 	static scale = function(c)
 	{
 		dx *= c;
@@ -308,20 +308,13 @@ function Vector2(_x2, _y2, _x1 = 0, _y1 = 0) constructor
 	
 	static get_angle = function(vec2)
 	{
-		a = angle - vec2.angle;
-		b = -a;
-
-		if (a < 0)
-		{
-			a += TPI;
-		}
-		else
-		{
-			b += TPI;
-		}
+		theta = max(angle, vec2.angle) - min(angle, vec2.angle);
 		
-		return min(a, b);
-		return arccos(0);
+		if (theta > pi)
+		{
+			return TPI - theta;
+		}
+		else return theta;
 	}
 	
 	//Get the angle between this vector and vec2, in degrees.
@@ -336,8 +329,7 @@ function Vector2(_x2, _y2, _x1 = 0, _y1 = 0) constructor
 	static dist_vec_to_point = function(_x, _y)
 	{
 		v = new Vector2(_x, _y, x1, y1);
-		theta = get_angle(v);
-		d = v.get_magnitude() * sin(theta);
+		d = v.get_magnitude() * sin(get_angle(v));
 		
 		delete v;
 		return abs(d);
@@ -353,12 +345,9 @@ function Vector2(_x2, _y2, _x1 = 0, _y1 = 0) constructor
 		c = dot(b) / b.magnitude2;
 		b.scale(c);
 		
-		if (!overextend)
+		if (!overextend && b.magnitude2 > vec2.magnitude2)
 		{
-			if (b.magnitude2 > vec2.magnitude2)
-			{
-				b.scale(sqrt(vec2.magnitude2 / b.magnitude2));
-			}
+			b.scale(sqrt(vec2.magnitude2 / b.magnitude2));
 		}
 		
 		return b;
@@ -388,7 +377,7 @@ function Vector2(_x2, _y2, _x1 = 0, _y1 = 0) constructor
 		if (lock_to_proj)
 		{
 			//Translate to the endpoint of the projection.
-			a1.translate(a2.x2 - a1.x1, a2.y2 - a1.y1);;
+			a1.translate(a2.x2 - a1.x1, a2.y2 - a1.y1);
 		}
 		
 		a1.sub(a2);
