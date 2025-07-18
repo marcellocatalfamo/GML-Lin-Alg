@@ -76,7 +76,7 @@ function v2_lock_base(vec1, vec2)
 	
 /// @func					v2_redefine
 /// @desc					Completely reorient the vector.
-/// @param {Struct.Vector2}	The vector being affected.
+/// @param {Struct.Vector2}	vec2 The vector being affected.
 /// @param {Real}			_x2 The endpoint x value.
 /// @param {Real}			_y2 The endpoint y value.
 /// @param {Real}			_x1 (Optional) The start point x value.
@@ -142,10 +142,10 @@ function v2_sub(vec1, vec2)
 /// @param {Struct.Vector2}	vec2 The vector being scaled.
 /// @param {Real}			c The scale factor to be applied. 
 	
-function v2_scale(vec2, _c)
+function v2_scale(vec2, c)
 {
-	vec2.dx *= _c;
-	vec2.dy *= _c;
+	vec2.dx *= c;
+	vec2.dy *= c;
 	vec2.x2 = vec2.x1 + vec2.dx;
 	vec2.y2 = vec2.y1 + vec2.dy;
 	
@@ -216,7 +216,7 @@ function v2_transform(vec2, a1, a2, b1, b2)
 
 /// @func					v2_matrix_transform(vec2, m)
 /// @desc					Transform the vector using a 2D matrix.
-/// @param Struct.Vector2}	vec1 The vector being transformed.
+/// @param {Struct.Vector2}	vec2 The vector being transformed.
 /// @param {Array<Real>}	m The transformation matrix.
 
 function v2_matrix_transform(vec2, m)
@@ -232,8 +232,8 @@ function v2_matrix_transform(vec2, m)
 
 /// @func					v2_shear_x(vec2, c)
 /// @desc					Shear in the x direction by c.
-/// @param {Struct.Vector2}	The vector being shorn.
-/// @param {Real}			The proportion of the shear.
+/// @param {Struct.Vector2}	vec2 The vector being shorn.
+/// @param {Real}			c The proportion of the shear.
 
 function v2_shear_x(vec2, c)
 {
@@ -242,8 +242,8 @@ function v2_shear_x(vec2, c)
 	
 /// @func					v2_shear_y(vec2, c)
 /// @desc					Shear in the y direction by c.
-/// @param {Struct.Vector2}	The vector being shorn.
-/// @param {Real}			The proportion of the shear.
+/// @param {Struct.Vector2}	vec2 The vector being shorn.
+/// @param {Real}			c The proportion of the shear.
 	
 function v2_shear_y(vec2, c)
 {
@@ -278,7 +278,7 @@ function v2_cross(vec1, vec2)
 /// @func					v2_cross_magnitude(vec1, vec2)
 /// @desc					Returns the magnitude of the cross product.
 /// @param {Struct.Vector2} vec1 The first vector being crossed.
-/// @param {Struct.Vector2} vec1 The second vector being crossed.
+/// @param {Struct.Vector2} vec2 The second vector being crossed.
 /// @return {Real}
 
 function v2_cross_magnitude(vec1, vec2)
